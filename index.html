@@ -60,121 +60,6 @@
             // Initial setup for the mobile menu state
             document.getElementById('mobile-menu').classList.add('hidden');
         });
-
-
-        // 3. GEMINI API FUNCTIONALITY: AI Content Idea Generator
-        // This is a free utility tool for the user's customers to test the content generation capability.
-        const API_MODEL = 'gemini-2.5-flash-preview-09-2025';
-        const apiKey = ""; // Canvas environment will provide this
-
-        // Function to implement exponential backoff
-        const callApiWithBackoff = async (url, options, maxRetries = 5) => {
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.status === 429) {
-                        throw new Error('Rate limit exceeded');
-                    }
-                    if (!response.ok) {
-                        const errorBody = await response.text();
-                        throw new Error(`HTTP error! Status: ${response.status}. Response: ${errorBody}`);
-                    }
-                    return response.json();
-                } catch (error) {
-                    if (attempt === maxRetries - 1) {
-                        console.error("API call failed after max retries:", error);
-                        throw error;
-                    }
-                    const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
-        };
-
-        async function generateContentIdea() {
-            const businessType = document.getElementById('ai-business-type').value.trim();
-            const serviceArea = document.getElementById('ai-service-area').value.trim();
-            const resultDiv = document.getElementById('ai-result-content');
-            const generateButton = document.getElementById('ai-generate-button');
-            const loadingIndicator = document.getElementById('ai-loading-indicator');
-            
-            if (!businessType) {
-                resultDiv.innerHTML = '<p class="text-red-500">Please enter your type of business.</p>';
-                return;
-            }
-
-            // Show loading state and disable button
-            generateButton.disabled = true;
-            generateButton.classList.add('opacity-50');
-            loadingIndicator.classList.remove('hidden');
-            resultDiv.innerHTML = '<p class="text-gray-500">Generating unique content idea...</p>';
-            
-            // System instruction for the content writer persona
-            const systemPrompt = "Act as a professional, friendly, and expert web content writer specializing in local SEO for small service businesses. Your goal is to generate a compelling, concise (100-word maximum) 'About Us' or 'Service Summary' paragraph tailored for a high-converting website. The tone must be clear, confident, and professional. Focus on speed, reliability, and local service. Do not use markdown formatting (like bolding or lists).";
-            
-            const areaClause = serviceArea ? `in the ${serviceArea} area` : 'for the local community';
-            const userQuery = `Generate a website content summary paragraph for a ${businessType} business ${areaClause}.`;
-
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${API_MODEL}:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                // Enable search grounding to base the response on up-to-date web information
-                tools: [{ "google_search": {} }],
-            };
-
-            try {
-                const result = await callApiWithBackoff(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-
-                // Extract text and sources
-                const candidate = result.candidates?.[0];
-                let text = 'Sorry, I couldn\'t generate content this time.';
-                let sources = [];
-                
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    text = candidate.content.parts[0].text;
-
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        sources = groundingMetadata.groundingAttributions
-                            .map(attribution => ({
-                                uri: attribution.web?.uri,
-                                title: attribution.web?.title,
-                            }))
-                            .filter(source => source.uri && source.title);
-                    }
-                }
-
-                // Display results
-                let htmlContent = `<p class="text-lg text-gray-700 leading-relaxed italic mb-4">${text}</p>`;
-
-                if (sources.length > 0) {
-                    htmlContent += '<div class="mt-4 text-xs text-gray-500 text-left">';
-                    htmlContent += 'Source(s) used for grounding idea (Max 3 shown):';
-                    sources.slice(0, 3).forEach((source, index) => {
-                        htmlContent += `<a href="${source.uri}" target="_blank" class="block hover:underline text-flow-blue ml-2">${index + 1}. ${source.title}</a>`;
-                    });
-                    htmlContent += '</div>';
-                }
-
-                resultDiv.innerHTML = htmlContent;
-
-            } catch (error) {
-                console.error("Gemini API call failed:", error);
-                // Display user-friendly error message
-                resultDiv.innerHTML = `<p class="text-red-500">Error generating content idea. Please try again. (Debug: ${error.message.substring(0, 50)}...)</p>`;
-            } finally {
-                // Re-enable button and hide loading
-                generateButton.disabled = false;
-                generateButton.classList.remove('opacity-50');
-                loadingIndicator.classList.add('hidden');
-            }
-        }
     </script>
 </head>
 <body class="bg-white text-gray-800">
@@ -187,7 +72,6 @@
             <!-- Desktop CTAs -->
             <nav class="hidden md:flex space-x-6 items-center">
                 <a href="#services" class="text-gray-600 hover:text-flow-blue transition duration-200">Services</a>
-                <a href="#ai-tool" class="text-gray-600 hover:text-flow-blue transition duration-200">Content Idea ✨</a>
                 <a href="#pricing" class="text-gray-600 hover:text-flow-blue transition duration-200">Pricing</a>
                 <a href="#about" class="text-gray-600 hover:text-flow-blue transition duration-200">Meet Steve</a>
                 <a href="#contact" class="px-5 py-2 text-sm font-semibold bg-flow-blue text-white rounded-lg shadow-md hover:bg-emerald-600 transition duration-300">
@@ -205,7 +89,6 @@
         <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg border-t border-gray-100 absolute w-full z-40 pb-4">
             <nav class="flex flex-col space-y-2 px-4 pt-2">
                 <a href="#services" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50" onclick="toggleMobileMenu()">Services</a>
-                <a href="#ai-tool" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50" onclick="toggleMobileMenu()">Content Idea ✨</a>
                 <a href="#pricing" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50" onclick="toggleMobileMenu()">Pricing</a>
                 <a href="#about" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50" onclick="toggleMobileMenu()">Meet Steve</a>
                 <a href="#contact" class="mt-2 block w-full text-center py-2 text-sm font-semibold bg-flow-blue text-white rounded-lg hover:bg-emerald-600 transition duration-300" onclick="toggleMobileMenu()">
@@ -296,7 +179,7 @@
                         <p class="text-gray-600">Works perfectly on phones, tablets, and desktops.</p>
                     </div>
                     
-                    <!-- NEW Benefit Card 5: 7-Day Guarantee -->
+                    <!-- Benefit Card 5: 7-Day Guarantee -->
                     <div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition duration-300">
                         <div class="text-flow-blue mb-4 flex justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
@@ -403,46 +286,6 @@
             </div>
         </section>
         
-        <!-- === START GEMINI AI FEATURE: Content Idea Generator === -->
-        <section id="ai-tool" class="py-20 bg-flow-dark/5">
-            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark mb-4">
-                    See the Flow: Get a <span class="text-flow-blue">Content Idea ✨</span>
-                </h2>
-                <p class="text-xl text-gray-600 mb-10">
-                    Need professional content fast? Our AI helps kickstart your website copy to show you exactly what's possible.
-                </p>
-
-                <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-xl border border-gray-100 space-y-6">
-                    <!-- Input Fields -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                            <label for="ai-business-type" class="block text-sm font-medium text-gray-700 text-left mb-1">Your Business Type (e.g., Plumber)</label>
-                            <input type="text" id="ai-business-type" placeholder="e.g., Auto Repair Shop" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
-                        </div>
-                        <div>
-                            <label for="ai-service-area" class="block text-sm font-medium text-gray-700 text-left mb-1">Your Service Area (e.g., Miami, FL)</label>
-                            <input type="text" id="ai-service-area" placeholder="e.g., Houston, TX (Optional)" class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
-                        </div>
-                    </div>
-
-                    <!-- Generate Button -->
-                    <button id="ai-generate-button" onclick="generateContentIdea()" class="w-full px-8 py-4 text-lg font-bold text-white bg-flow-blue rounded-xl shadow-lg hover:bg-emerald-600 transition duration-300 transform hover:scale-[1.005] flex items-center justify-center">
-                        <svg id="ai-loading-indicator" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                        ✨ Generate My Website Content Idea
-                    </button>
-                    
-                    <!-- Result Area -->
-                    <div id="ai-result-content" class="min-h-[100px] p-4 bg-gray-50 rounded-lg border border-gray-200 text-left">
-                        <p class="text-gray-500">Your custom website content summary will appear here. Try an input like "local hairdresser"!</p>
-                    </div>
-
-                </div>
-                
-            </div>
-        </section>
-        <!-- === END GEMINI AI FEATURE === -->
-
         <!-- Pricing Section -->
         <section id="pricing" class="py-20 bg-gray-50/70">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
@@ -627,9 +470,10 @@
                     <!-- Optional CTA -->
                     <div class="mt-8 text-center">
                         <span class="text-gray-600 block mb-2">— OR —</span>
+                        <!-- Replace '#' with your WhatsApp link (e.g., https://wa.me/15551234567) -->
                         <a href="#" class="inline-flex items-center px-6 py-3 text-lg font-semibold text-white bg-green-500 rounded-xl shadow-lg hover:bg-green-600 transition duration-300">
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle-code mr-2"><path d="M7.9 20A10 10 0 0 0 16 15V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3.1Z"/><path d="m10 8-2 2 2 2"/><path d="m14 8 2 2-2 2"/></svg>
-                            WhatsApp Steve Now (Replace '#' with your WhatsApp link)
+                            WhatsApp Steve Now
                         </a>
                     </div>
                 </div>
@@ -702,7 +546,6 @@
                     <h5 class="font-bold text-flow-blue mb-2">Quick Links</h5>
                     <a href="#" class="block text-gray-300 hover:text-flow-blue transition duration-200">Home</a>
                     <a href="#services" class="block text-gray-300 hover:text-flow-blue transition duration-200">Services</a>
-                    <a href="#ai-tool" class="block text-gray-300 hover:text-flow-blue transition duration-200">Content Idea ✨</a>
                     <a href="#pricing" class="block text-gray-300 hover:text-flow-blue transition duration-200">Pricing</a>
                     <a href="#contact" class="block text-gray-300 hover:text-flow-blue transition duration-200">Contact</a>
                 </div>
