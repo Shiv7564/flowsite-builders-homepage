@@ -58,9 +58,15 @@
             });
 
             // Initial setup for the mobile menu state
-            document.getElementById('mobile-menu').classList.add('hidden');
+            const mobileMenu = document.getElementById('mobile-menu');
+            if (mobileMenu) {
+                mobileMenu.classList.add('hidden');
+            }
+
 
             // --- NETLIFY FORM SUCCESS HANDLING ---
+            // This detects the ?success=true parameter added by Netlify after a successful form submission 
+            // and shows the thank you message instead of the form.
             const params = new URLSearchParams(window.location.search);
             const contactFormContainer = document.getElementById('contact-form-container');
             const successMessageContainer = document.getElementById('success-message-container');
@@ -291,4 +297,317 @@
                     <!-- Icons are placeholders; focus is on layout and text -->
                     <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Plumbers</div>
                     <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Electricians</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">HVAC</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Roofers</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Real Estate</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Restaurants</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Salons</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Cleaning Services</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Repair Shops</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Gyms</div>
+                    <div class="col-span-3 sm:col-span-4 md:col-span-6 lg:col-span-10 p-4 bg-flow-blue/10 text-flow-blue rounded-xl text-center font-medium">
+                        Any local small business!
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Pricing Section -->
+        <section id="pricing" class="py-20 bg-gray-50/70">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark mb-12">Simple, Transparent Pricing</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
                     
+                    <!-- Plan 1: Starter Website -->
+                    <div class="flex flex-col p-8 bg-white rounded-2xl shadow-xl border-2 border-gray-100">
+                        <h3 class="text-2xl font-bold text-flow-dark mb-2">Starter Website</h3>
+                        <p class="text-5xl font-extrabold text-flow-blue mb-6">$199<span class="text-xl text-gray-500 font-normal"> / one-time</span></p>
+                        <p class="text-gray-600 mb-6">The perfect, fast-track option to get your business online.</p>
+                        <ul class="text-left space-y-3 flex-grow mb-8">
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 1–3 pages</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Mobile friendly</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Professional design</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Contact form</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Google Profile assistance</li>
+                        </ul>
+                        <a href="#contact" class="mt-auto block w-full py-3 text-lg font-semibold text-flow-blue bg-flow-blue/10 rounded-xl hover:bg-flow-blue/20 transition duration-300">
+                            Choose Starter
+                        </a>
+                    </div>
+
+                    <!-- Plan 2: Business Website (Recommended) -->
+                    <div class="flex flex-col p-10 bg-flow-dark rounded-2xl shadow-2xl ring-4 ring-flow-blue transform scale-[1.05] z-10">
+                        <p class="text-sm font-bold text-flow-blue mb-1 uppercase tracking-wider">Recommended</p>
+                        <h3 class="text-3xl font-bold text-white mb-2">Business Website</h3>
+                        <p class="text-6xl font-extrabold text-flow-blue mb-6">$349<span class="text-xl text-gray-300 font-normal"> / one-time</span></p>
+                        <p class="text-gray-300 mb-6">The essential package for lead generation and professional appeal.</p>
+                        <ul class="text-left space-y-3 flex-grow mb-8">
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 5 pages</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Content writing included</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> SEO optimized</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> WhatsApp/Call buttons</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Faster delivery</li>
+                        </ul>
+                        <a href="#contact" class="mt-auto block w-full py-3 text-lg font-bold text-flow-dark bg-flow-blue rounded-xl shadow-lg shadow-flow-blue/40 hover:bg-emerald-600 transition duration-300 transform hover:scale-[1.01]">
+                            Get Started Now
+                        </a>
+                    </div>
+
+                    <!-- Plan 3: Premium Website -->
+                    <div class="flex flex-col p-8 bg-white rounded-2xl shadow-xl border-2 border-gray-100">
+                        <h3 class="text-2xl font-bold text-flow-dark mb-2">Premium Website</h3>
+                        <p class="text-5xl font-extrabold text-flow-blue mb-6">$499<span class="text-xl text-gray-500 font-normal"> / one-time</span></p>
+                        <p class="text-gray-600 mb-6">For established businesses needing comprehensive features and support.</p>
+                        <ul class="text-left space-y-3 flex-grow mb-8">
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 10 pages</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Advanced design</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Booking forms</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> CRM integration (basic)</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Priority support</li>
+                        </ul>
+                        <a href="#contact" class="mt-auto block w-full py-3 text-lg font-semibold text-flow-blue bg-flow-blue/10 rounded-xl hover:bg-flow-blue/20 transition duration-300">
+                            Choose Premium
+                        </a>
+                    </div>
+                    
+                </div>
+                
+                <!-- Guarantee Note -->
+                <div class="mt-12 p-4 bg-flow-blue/10 rounded-xl border border-flow-blue/30 inline-flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote text-flow-dark"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+                    <p class="text-lg font-semibold text-flow-dark">
+                        All packages come with a **7-Day Risk-Free Money-Back Guarantee.**
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark text-center mb-12">Trusted by Small Business Owners</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <!-- Testimonial 1 -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-md border-t-4 border-flow-blue/70">
+                        <p class="text-xl italic text-gray-700 mb-4">“FlowSite Builders got our website live in just 2 days. Amazing service.”</p>
+                        <p class="font-semibold text-flow-dark">— John P., <span class="text-flow-blue">Plumber</span></p>
+                    </div>
+
+                    <!-- Testimonial 2 -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-md border-t-4 border-flow-blue/70">
+                        <p class="text-xl italic text-gray-700 mb-4">“Steve was super helpful. The $199 starter plan was perfect for my small salon.”</p>
+                        <p class="font-semibold text-flow-dark">— Maria G., <span class="text-flow-blue">Salon Owner</span></p>
+                    </div>
+
+                    <!-- Testimonial 3 -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-md border-t-4 border-flow-blue/70">
+                        <p class="text-xl italic text-gray-700 mb-4">“Our online presence improved instantly. Highly recommended! We started seeing calls the next day.”</p>
+                        <p class="font-semibold text-flow-dark">— Mark D., <span class="text-flow-blue">Electrician</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-20 bg-gray-50/70">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-12 gap-12 items-center">
+                
+                <!-- Steve's Photo Placeholder -->
+                <div class="md:col-span-4 lg:col-span-3">
+                    <img src="https://placehold.co/300x300/e5e7eb/1f2937?text=Steve+The+Builder" 
+                         alt="Friendly portrait of Steve, founder of FlowSite Builders"
+                         class="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-full mx-auto shadow-xl ring-4 ring-white"
+                         onerror="this.onerror=null; this.src='https://placehold.co/300x300/1f2937/ffffff?text=Steve';"
+                    />
+                </div>
+
+                <!-- Content -->
+                <div class="md:col-span-8 lg:col-span-9 text-center md:text-left">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark mb-4">Meet Steve — Your Website Guy</h2>
+                    <p class="text-xl text-gray-600 leading-relaxed max-w-3xl md:ml-0 mx-auto">
+                        Hi, I’m Steve, founder of FlowSite Builders. I help small-business owners get online quickly without spending thousands of dollars. Whether you’re a plumber, barber, or shop owner, I’ll help you look professional, build trust, and attract more customers. Let’s get your flow of business started!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section (High-Converting Form) -->
+        <section id="contact" class="py-20">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                
+                <!-- SUCCESS MESSAGE CONTAINER (Initially Hidden) -->
+                <div id="success-message-container" class="hidden bg-white p-6 sm:p-10 rounded-2xl shadow-2xl border-2 border-flow-blue/10 text-center">
+                    <div class="text-flow-blue mx-auto mb-6">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-check-circle-2 inline-block"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+                    </div>
+                    <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark mb-4">Thank You!</h2>
+                    <p class="text-xl text-gray-700 mb-6">Your inquiry has been successfully submitted and sent to <span class="font-semibold text-flow-blue">flowsitebuilder@gmail.com</span>.</p>
+                    <p class="text-lg text-gray-600">Steve will be in touch with you within 24 hours to discuss your new website!</p>
+                </div>
+
+                <!-- CONTACT FORM CONTAINER (Initially Visible) -->
+                <div id="contact-form-container" class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl border-2 border-flow-blue/10">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark text-center mb-10">Get Your Website Today</h2>
+                    
+                    <!-- 
+                        Form:
+                        - action="." tells Netlify to redirect back to the current page on success, preventing the 404 error.
+                        - netlify-email="flowsitebuilder@gmail.com" ensures email is sent to your address.
+                    -->
+                    <form name="contact" method="POST" action="." data-netlify="true" netlify-email="flowsitebuilder@gmail.com" netlify-honeypot="bot-field" data-netlify-recaptcha="true" class="space-y-6">
+                        <!-- Hidden fields required by Netlify Forms -->
+                        <input type="hidden" name="form-name" value="contact" />
+                        <input type="hidden" name="bot-field" />
+
+                        <!-- Name & Business Name -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                                <input type="text" name="name" id="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                            </div>
+                            <div>
+                                <label for="business-name" class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                                <input type="text" name="business-name" id="business-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                            </div>
+                        </div>
+
+                        <!-- Phone & Email -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                <input type="tel" name="phone" id="phone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                <input type="email" name="email" id="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                            </div>
+                        </div>
+
+                        <!-- Service Needed -->
+                        <div>
+                            <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Service Needed</label>
+                            <select id="service" name="service" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition appearance-none bg-white">
+                                <option value="">Select a package...</option>
+                                <option value="starter">Starter Website ($199)</option>
+                                <option value="business">Business Website ($349) - Recommended</option>
+                                <option value="premium">Premium Website ($499)</option>
+                                <option value="call">Schedule a Free Call</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Submit Button -->
+                        <div>
+                            <button type="submit" class="w-full px-8 py-4 text-xl font-bold text-white bg-flow-blue rounded-xl shadow-xl shadow-flow-blue/40 hover:bg-emerald-600 transition duration-300 transform hover:scale-[1.005]">
+                                Submit Inquiry & Get Started
+                            </button>
+                        </div>
+
+                        <p class="text-center text-sm text-gray-500">
+                            We’ll get back to you within 24 hours.
+                        </p>
+                    </form>
+                    
+                    <!-- Optional CTA -->
+                    <div class="mt-8 text-center">
+                        <span class="text-gray-600 block mb-2">— OR —</span>
+                        <!-- Replace '#' with your WhatsApp link (e.g., https://wa.me/15551234567) -->
+                        <a href="#" class="inline-flex items-center px-6 py-3 text-lg font-semibold text-white bg-green-500 rounded-xl shadow-lg hover:bg-green-600 transition duration-300">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle-code mr-2"><path d="M7.9 20A10 10 0 0 0 16 15V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3.1Z"/><path d="m10 8-2 2 2 2"/><path d="m14 8 2 2-2 2"/></svg>
+                            WhatsApp Steve Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Mock Legal Page 1: Terms and Privacy -->
+        <section id="terms-and-privacy" class="py-20 bg-white border-t border-gray-200">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
+                <h2 class="text-3xl font-bold text-flow-dark mb-6">Terms & Privacy (Mock Content)</h2>
+                <p class="text-sm text-gray-500 mb-8">Last Updated: October 25, 2025</p>
+
+                <h3 class="text-2xl font-semibold text-flow-dark mb-3">1. Terms of Service</h3>
+                <p class="text-gray-700 mb-6">
+                    By using FlowSite Builders services, you agree to these mock terms. Our service is to deliver a functional, single-page website within 72 hours, as per the package selected. We are not responsible for third-party hosting costs (e.g., domain registration or advanced hosting services beyond Netlify's free tier). All content provided by FlowSite Builders (excluding client-owned logos and branding) is licensed to the client for website use only.
+                </p>
+
+                <h3 class="text-2xl font-semibold text-flow-dark mb-3">2. Privacy Policy</h3>
+                <p class="text-gray-700">
+                    We only collect necessary contact information (Name, Business Name, Email, Phone) via our contact form for the purpose of initiating service and communication. We do not sell or share your personal data with third-party advertisers. All client information is kept confidential and used solely for fulfilling your website building request.
+                </p>
+                <div class="mt-8 text-center">
+                    <a href="#hero" class="text-flow-blue hover:text-emerald-600 font-semibold">Back to Top</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mock Legal Page 2: 7-Day Refund Policy -->
+        <section id="refund-policy" class="py-20 bg-gray-50/70 border-t border-gray-200">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
+                <h2 class="text-3xl font-bold text-flow-dark mb-6">7-Day Risk-Free Money-Back Guarantee</h2>
+                <p class="text-sm text-gray-500 mb-8">Effective Date: October 25, 2025</p>
+
+                <p class="text-xl font-medium text-flow-dark mb-6">
+                    We are confident in our speed and quality. If you are not completely satisfied with the initial website design and delivery within the first 7 days of launch, we offer a **full refund.**
+                </p>
+
+                <h3 class="text-2xl font-semibold text-flow-dark mb-3">How the Guarantee Works:</h3>
+                <ul class="list-disc list-inside space-y-3 text-gray-700 mb-6 pl-4">
+                    <li>The 7-day period begins on the day we provide you with the first live link to your website.</li>
+                    <li>To request a refund, you must contact Steve directly via email or phone within the 7-day window.</li>
+                    <li>The guarantee covers the cost of our service package only. Third-party fees (like domain registration) are non-refundable.</li>
+                    <li>Upon successful refund, FlowSite Builders reserves the right to unpublish or reclaim the website files.</li>
+                </ul>
+
+                <p class="text-gray-700">
+                    Our goal is your satisfaction. We always prefer to resolve any issues via free edits during the initial 7-day period before processing a refund.
+                </p>
+                <div class="mt-8 text-center">
+                    <a href="#hero" class="text-flow-blue hover:text-emerald-600 font-semibold">Back to Top</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-flow-dark text-white py-12 mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-8 border-b border-gray-700 pb-8 mb-8">
+                
+                <!-- Logo/Branding -->
+                <div class="col-span-2 md:col-span-2">
+                    <h4 class="text-2xl font-extrabold tracking-tight mb-2">FlowSite<span class="text-flow-blue">Builders</span></h4>
+                    <p class="text-gray-400 max-w-xs">“Your website, built in minutes — not months.”</p>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="space-y-2">
+                    <h5 class="font-bold text-flow-blue mb-2">Quick Links</h5>
+                    <a href="#" class="block text-gray-300 hover:text-flow-blue transition duration-200">Home</a>
+                    <a href="#services" class="block text-gray-300 hover:text-flow-blue transition duration-200">Services</a>
+                    <a href="#pricing" class="block text-gray-300 hover:text-flow-blue transition duration-200">Pricing</a>
+                    <a href="#contact" class="block text-gray-300 hover:text-flow-blue transition duration-200">Contact</a>
+                </div>
+
+                <!-- Legal Links -->
+                <div class="space-y-2">
+                    <h5 class="font-bold text-flow-blue mb-2">Legal</h5>
+                    <a href="#terms-and-privacy" class="block text-gray-300 hover:text-flow-blue transition duration-200">Terms & Privacy</a>
+                    <a href="#refund-policy" class="block text-gray-300 hover:text-flow-blue transition duration-200">**7-Day Refund Policy**</a>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="text-center text-gray-500 text-sm">
+                FlowSite Builders © 2025 – Built for Small Businesses
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+
