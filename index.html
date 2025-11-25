@@ -414,10 +414,17 @@
                 <div class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl border-2 border-flow-blue/10">
                     <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark text-center mb-10">Get Your Website Today</h2>
                     
-                    <!-- IMPORTANT: The 'data-netlify="true"' attribute enables form submission tracking on Netlify. -->
-                    <form name="contact" method="POST" data-netlify="true" class="space-y-6">
-                        <!-- Hidden field required by Netlify Forms -->
-                        <input type="hidden" name="form-name" value="contact" /> 
+                    <!-- 
+                        UPDATED: 
+                        1. Added netlify-email="flowsitebuilder@gmail.com" to ensure inquiries are sent to the correct address.
+                        2. Added netlify-honeypot="bot-field" for basic spam protection.
+                        3. Added data-netlify-recaptcha="true" for bot verification.
+                    -->
+                    <form name="contact" method="POST" data-netlify="true" netlify-email="flowsitebuilder@gmail.com" netlify-honeypot="bot-field" data-netlify-recaptcha="true" class="space-y-6">
+                        <!-- Hidden fields required by Netlify Forms -->
+                        <input type="hidden" name="form-name" value="contact" />
+                        <!-- Honeypot field (must be hidden with CSS/tailwind classes on a live site, but keeping it visible for reference here) -->
+                        <input type="hidden" name="bot-field" />
 
                         <!-- Name & Business Name -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
