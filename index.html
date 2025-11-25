@@ -59,123 +59,57 @@
 
             // Initial setup for the mobile menu state
             document.getElementById('mobile-menu').classList.add('hidden');
-        });
-
-
-        // 3. GEMINI API FUNCTIONALITY: AI Content Idea Generator
-        const API_MODEL = 'gemini-2.5-flash-preview-09-2025';
-        const apiKey = ""; // Canvas environment will provide this
-
-        // Function to implement exponential backoff
-        const callApiWithBackoff = async (url, options, maxRetries = 5) => {
-            for (let attempt = 0; attempt < maxRetries; attempt++) {
-                try {
-                    const response = await fetch(url, options);
-                    if (response.status === 429) {
-                        throw new Error('Rate limit exceeded');
-                    }
-                    if (!response.ok) {
-                        // Throw specific error for debugging
-                        const errorBody = await response.text();
-                        throw new Error(`HTTP error! Status: ${response.status}. Response: ${errorBody}`);
-                    }
-                    return response.json();
-                } catch (error) {
-                    if (attempt === maxRetries - 1) {
-                        console.error("API call failed after max retries:", error);
-                        throw error;
-                    }
-                    const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
-                    // console.log(`Retrying API call in ${delay / 1000}s...`); // Debugging line
-                    await new Promise(resolve => setTimeout(resolve, delay));
-                }
-            }
-        };
-
-        async function generateContentIdea() {
-            const businessType = document.getElementById('ai-business-type').value.trim();
-            const serviceArea = document.getElementById('ai-service-area').value.trim();
-            const resultDiv = document.getElementById('ai-result-content');
-            const generateButton = document.getElementById('ai-generate-button');
-            const loadingIndicator = document.getElementById('ai-loading-indicator');
             
-            if (!businessType) {
-                resultDiv.innerHTML = '<p class="text-red-500">Please enter your type of business.</p>';
-                return;
-            }
-
-            // Show loading state and disable button
-            generateButton.disabled = true;
-            generateButton.classList.add('opacity-50');
-            loadingIndicator.classList.remove('hidden');
-            resultDiv.innerHTML = '<p class="text-gray-500">Generating unique content idea...</p>';
+            // 3. Form Submission Handling (AJAX to prevent full page redirect/error)
+            const form = document.forms.contact;
+            const formContainer = document.getElementById('contact-form-container');
+            const successMessage = document.getElementById('success-message');
             
-            // System instruction for the content writer persona
-            const systemPrompt = "Act as a professional, friendly, and expert web content writer specializing in local SEO for small service businesses. Your goal is to generate a compelling, concise (100-word maximum) 'About Us' or 'Service Summary' paragraph tailored for a high-converting website. The tone must be clear, confident, and professional. Focus on speed, reliability, and local service. Do not use markdown formatting (like bolding or lists).";
-            
-            const areaClause = serviceArea ? `in the ${serviceArea} area` : 'for the local community';
-            const userQuery = `Generate a website content summary paragraph for a ${businessType} business ${areaClause}.`;
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    
+                    // Display loading state (optional, but good for user feedback)
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    submitButton.textContent = 'Sending...';
+                    submitButton.disabled = true;
 
-            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${API_MODEL}:generateContent?key=${apiKey}`;
-
-            const payload = {
-                contents: [{ parts: [{ text: userQuery }] }],
-                systemInstruction: { parts: [{ text: systemPrompt }] },
-                // Enable search grounding to base the response on up-to-date web information
-                tools: [{ "google_search": {} }],
-            };
-
-            try {
-                const result = await callApiWithBackoff(apiUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
+                    // Netlify requires URL-encoded data
+                    const formData = new FormData(form);
+                    const encodedData = new URLSearchParams(formData).toString();
+                    
+                    // The POST request automatically goes to Netlify's form handler
+                    try {
+                        const response = await fetch('/', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                            body: encodedData
+                        });
+                        
+                        // Check if submission was successful (Netlify handles this behind the scenes)
+                        if (response.ok) {
+                            formContainer.classList.add('hidden');
+                            successMessage.classList.remove('hidden');
+                            // Clear form fields
+                            form.reset();
+                        } else {
+                            // Netlify's default behavior for a successful submission but no thank-you page
+                            // is usually a redirect. For AJAX, we check the response status.
+                            // If the response is not OK (e.g., a network error or specific server issue),
+                            // we show an error.
+                            console.error('Form submission failed (HTTP error):', response.statusText);
+                            alert('An error occurred during submission. Please try again or use the WhatsApp link.');
+                        }
+                    } catch (error) {
+                        console.error('Network or processing error:', error);
+                        alert('A network error occurred. Please try again or use the WhatsApp link.');
+                    } finally {
+                        submitButton.textContent = 'Submit Inquiry & Get Started';
+                        submitButton.disabled = false;
+                    }
                 });
-
-                // Extract text and sources
-                const candidate = result.candidates?.[0];
-                let text = 'Sorry, I couldn\'t generate content this time.';
-                let sources = [];
-                
-                if (candidate && candidate.content?.parts?.[0]?.text) {
-                    text = candidate.content.parts[0].text;
-
-                    const groundingMetadata = candidate.groundingMetadata;
-                    if (groundingMetadata && groundingMetadata.groundingAttributions) {
-                        sources = groundingMetadata.groundingAttributions
-                            .map(attribution => ({
-                                uri: attribution.web?.uri,
-                                title: attribution.web?.title,
-                            }))
-                            .filter(source => source.uri && source.title);
-                    }
-                }
-
-                // Display results
-                let htmlContent = `<p class="text-lg text-gray-700 leading-relaxed italic mb-4">${text}</p>`;
-
-                if (sources.length > 0) {
-                    htmlContent += '<div class="mt-4 text-xs text-gray-500 text-left">';
-                    htmlContent += 'Source(s) used for grounding idea (Max 3 shown):';
-                    sources.slice(0, 3).forEach((source, index) => {
-                        htmlContent += `<a href="${source.uri}" target="_blank" class="block hover:underline text-flow-blue ml-2">${index + 1}. ${source.title}</a>`;
-                    });
-                    htmlContent += '</div>';
-                }
-
-                resultDiv.innerHTML = htmlContent;
-
-            } catch (error) {
-                console.error("Gemini API call failed:", error);
-                // Display user-friendly error message
-                resultDiv.innerHTML = `<p class="text-red-500">Error generating content idea. Please check your inputs and try again later. (Error: ${error.message.substring(0, 50)}...)</p>`;
-            } finally {
-                // Re-enable button and hide loading
-                generateButton.disabled = false;
-                generateButton.classList.remove('opacity-50');
-                loadingIndicator.classList.add('hidden');
             }
-        }
+        });
     </script>
 </head>
 <body class="bg-white text-gray-800">
@@ -188,7 +122,6 @@
             <!-- Desktop CTAs -->
             <nav class="hidden md:flex space-x-6 items-center">
                 <a href="#services" class="text-gray-600 hover:text-flow-blue transition duration-200">Services</a>
-                <a href="#ai-tool" class="text-gray-600 hover:text-flow-blue transition duration-200">Content Idea ✨</a>
                 <a href="#pricing" class="text-gray-600 hover:text-flow-blue transition duration-200">Pricing</a>
                 <a href="#about" class="text-gray-600 hover:text-flow-blue transition duration-200">Meet Steve</a>
                 <a href="#contact" class="px-5 py-2 text-sm font-semibold bg-flow-blue text-white rounded-lg shadow-md hover:bg-emerald-600 transition duration-300">
@@ -205,11 +138,10 @@
         <!-- Mobile Menu Dropdown -->
         <div id="mobile-menu" class="hidden md:hidden bg-white shadow-lg border-t border-gray-100 absolute w-full z-40 pb-4">
             <nav class="flex flex-col space-y-2 px-4 pt-2">
-                <a href="#services" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50">Services</a>
-                <a href="#ai-tool" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50">Content Idea ✨</a>
-                <a href="#pricing" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50">Pricing</a>
-                <a href="#about" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50">Meet Steve</a>
-                <a href="#contact" class="mt-2 block w-full text-center py-2 text-sm font-semibold bg-flow-blue text-white rounded-lg hover:bg-emerald-600 transition duration-300">
+                <a href="#services" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50" onclick="toggleMobileMenu()">Services</a>
+                <a href="#pricing" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50" onclick="toggleMobileMenu()">Pricing</a>
+                <a href="#about" class="py-2 text-gray-600 hover:text-flow-blue border-b border-gray-50/50" onclick="toggleMobileMenu()">Meet Steve</a>
+                <a href="#contact" class="mt-2 block w-full text-center py-2 text-sm font-semibold bg-flow-blue text-white rounded-lg hover:bg-emerald-600 transition duration-300" onclick="toggleMobileMenu()">
                     Get Your Website
                 </a>
             </nav>
@@ -297,7 +229,7 @@
                         <p class="text-gray-600">Works perfectly on phones, tablets, and desktops.</p>
                     </div>
                     
-                    <!-- NEW Benefit Card 5: 7-Day Guarantee -->
+                    <!-- Benefit Card 5: 7-Day Guarantee -->
                     <div class="p-6 bg-white rounded-xl shadow-lg border border-gray-100 hover:shadow-xl transition duration-300">
                         <div class="text-flow-blue mb-4 flex justify-center">
                             <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-check"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="m9 12 2 2 4-4"/></svg>
@@ -323,4 +255,381 @@
                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-layout-grid"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><line x1="3" x2="21" y1="12" y2="12"/><line x1="12" x2="12" y1="3" y2="21"/></svg>
                         </div>
                         <div>
-                            <h3 cla
+                            <h3 class="text-lg font-semibold text-flow-dark">Professional Website Design</h3>
+                            <p class="text-gray-600">Clean, modern designs customized for your business.</p>
+                        </div>
+                    </div>
+
+                    <!-- Service 2: Business Email Setup -->
+                    <div class="flex p-6 bg-white rounded-xl shadow-md space-x-4 items-start">
+                        <div class="p-3 bg-flow-blue/10 text-flow-blue rounded-full flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mail"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-flow-dark">Business Email Setup</h3>
+                            <p class="text-gray-600">YourName@YourBusiness.com included.</p>
+                        </div>
+                    </div>
+
+                    <!-- Service 3: Google Profile Optimization -->
+                    <div class="flex p-6 bg-white rounded-xl shadow-md space-x-4 items-start">
+                        <div class="p-3 bg-flow-blue/10 text-flow-blue rounded-full flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-map-pin"><path d="M12 21.7c-3.7 0-6.7-3-6.7-6.7C5.3 11 12 2 12 2s6.7 9 6.7 13c0 3.7-3 6.7-6.7 6.7z"/><circle cx="12" cy="11" r="3"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-flow-dark">Google Profile Optimization</h3>
+                            <p class="text-gray-600">Increase your online visibility instantly (Google My Business).</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Service 4: On-Page SEO -->
+                    <div class="flex p-6 bg-white rounded-xl shadow-md space-x-4 items-start">
+                        <div class="p-3 bg-flow-blue/10 text-flow-blue rounded-full flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-search"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-flow-dark">On-Page SEO</h3>
+                            <p class="text-gray-600">Your website will be optimized for search results.</p>
+                        </div>
+                    </div>
+
+                    <!-- Service 5: Unlimited Edits for 7 Days -->
+                    <div class="flex p-6 bg-white rounded-xl shadow-md space-x-4 items-start">
+                        <div class="p-3 bg-flow-blue/10 text-flow-blue rounded-full flex-shrink-0">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-rotate-ccw"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-4.66 1.13"/><path d="M4.9 3.6A1.66 1.66 0 0 0 5 4.5V9h-4.5"/><polyline points="2 12 6 12 9 15 9 9"/></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-semibold text-flow-dark">Unlimited Edits for 7 Days</h3>
+                            <p class="text-gray-600">After delivery, request changes anytime during the first week.</p>
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+        
+        <!-- Industries We Serve Section -->
+        <section id="industries" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark mb-4">Perfect for Any Local Business</h2>
+                <p class="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+                    If your business needs customers, you need a website — we make that part easy.
+                </p>
+
+                <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-10 gap-4">
+                    <!-- List of Industries -->
+                    <!-- Icons are placeholders; focus is on layout and text -->
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Plumbers</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Electricians</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">HVAC</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Roofers</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Real Estate</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Restaurants</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Salons</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Cleaning Services</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Repair Shops</div>
+                    <div class="p-3 bg-gray-100 rounded-lg transition duration-200 hover:bg-flow-blue/20 hover:text-flow-dark text-gray-600 text-sm font-medium">Gyms</div>
+                    <div class="col-span-3 sm:col-span-4 md:col-span-6 lg:col-span-10 p-4 bg-flow-blue/10 text-flow-blue rounded-xl text-center font-medium">
+                        Any local small business!
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Pricing Section -->
+        <section id="pricing" class="py-20 bg-gray-50/70">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark mb-12">Simple, Transparent Pricing</h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                    
+                    <!-- Plan 1: Starter Website -->
+                    <div class="flex flex-col p-8 bg-white rounded-2xl shadow-xl border-2 border-gray-100">
+                        <h3 class="text-2xl font-bold text-flow-dark mb-2">Starter Website</h3>
+                        <p class="text-5xl font-extrabold text-flow-blue mb-6">$199<span class="text-xl text-gray-500 font-normal"> / one-time</span></p>
+                        <p class="text-gray-600 mb-6">The perfect, fast-track option to get your business online.</p>
+                        <ul class="text-left space-y-3 flex-grow mb-8">
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 1–3 pages</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Mobile friendly</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Professional design</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Contact form</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Google Profile assistance</li>
+                        </ul>
+                        <a href="#contact" class="mt-auto block w-full py-3 text-lg font-semibold text-flow-blue bg-flow-blue/10 rounded-xl hover:bg-flow-blue/20 transition duration-300">
+                            Choose Starter
+                        </a>
+                    </div>
+
+                    <!-- Plan 2: Business Website (Recommended) -->
+                    <div class="flex flex-col p-10 bg-flow-dark rounded-2xl shadow-2xl ring-4 ring-flow-blue transform scale-[1.05] z-10">
+                        <p class="text-sm font-bold text-flow-blue mb-1 uppercase tracking-wider">Recommended</p>
+                        <h3 class="text-3xl font-bold text-white mb-2">Business Website</h3>
+                        <p class="text-6xl font-extrabold text-flow-blue mb-6">$349<span class="text-xl text-gray-300 font-normal"> / one-time</span></p>
+                        <p class="text-gray-300 mb-6">The essential package for lead generation and professional appeal.</p>
+                        <ul class="text-left space-y-3 flex-grow mb-8">
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 5 pages</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Content writing included</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> SEO optimized</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> WhatsApp/Call buttons</li>
+                            <li class="flex items-center text-gray-100"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Faster delivery</li>
+                        </ul>
+                        <a href="#contact" class="mt-auto block w-full py-3 text-lg font-bold text-flow-dark bg-flow-blue rounded-xl shadow-lg shadow-flow-blue/40 hover:bg-emerald-600 transition duration-300 transform hover:scale-[1.01]">
+                            Get Started Now
+                        </a>
+                    </div>
+
+                    <!-- Plan 3: Premium Website -->
+                    <div class="flex flex-col p-8 bg-white rounded-2xl shadow-xl border-2 border-gray-100">
+                        <h3 class="text-2xl font-bold text-flow-dark mb-2">Premium Website</h3>
+                        <p class="text-5xl font-extrabold text-flow-blue mb-6">$499<span class="text-xl text-gray-500 font-normal"> / one-time</span></p>
+                        <p class="text-gray-600 mb-6">For established businesses needing comprehensive features and support.</p>
+                        <ul class="text-left space-y-3 flex-grow mb-8">
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Up to 10 pages</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Advanced design</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Booking forms</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> CRM integration (basic)</li>
+                            <li class="flex items-center text-gray-700"><svg class="w-5 h-5 mr-2 text-flow-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> Priority support</li>
+                        </ul>
+                        <a href="#contact" class="mt-auto block w-full py-3 text-lg font-semibold text-flow-blue bg-flow-blue/10 rounded-xl hover:bg-flow-blue/20 transition duration-300">
+                            Choose Premium
+                        </a>
+                    </div>
+                    
+                </div>
+                
+                <!-- Guarantee Note -->
+                <div class="mt-12 p-4 bg-flow-blue/10 rounded-xl border border-flow-blue/30 inline-flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-banknote text-flow-dark"><rect width="20" height="12" x="2" y="6" rx="2"/><circle cx="12" cy="12" r="2"/><path d="M6 12h.01M18 12h.01"/></svg>
+                    <p class="text-lg font-semibold text-flow-dark">
+                        All packages come with a **7-Day Risk-Free Money-Back Guarantee.**
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Testimonials Section -->
+        <section id="testimonials" class="py-20">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark text-center mb-12">Trusted by Small Business Owners</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    <!-- Testimonial 1 -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-md border-t-4 border-flow-blue/70">
+                        <p class="text-xl italic text-gray-700 mb-4">“FlowSite Builders got our website live in just 2 days. Amazing service.”</p>
+                        <p class="font-semibold text-flow-dark">— John P., <span class="text-flow-blue">Plumber</span></p>
+                    </div>
+
+                    <!-- Testimonial 2 -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-md border-t-4 border-flow-blue/70">
+                        <p class="text-xl italic text-gray-700 mb-4">“Steve was super helpful. The $199 starter plan was perfect for my small salon.”</p>
+                        <p class="font-semibold text-flow-dark">— Maria G., <span class="text-flow-blue">Salon Owner</span></p>
+                    </div>
+
+                    <!-- Testimonial 3 -->
+                    <div class="p-6 bg-gray-50 rounded-xl shadow-md border-t-4 border-flow-blue/70">
+                        <p class="text-xl italic text-gray-700 mb-4">“Our online presence improved instantly. Highly recommended! We started seeing calls the next day.”</p>
+                        <p class="font-semibold text-flow-dark">— Mark D., <span class="text-flow-blue">Electrician</span></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- About Us Section -->
+        <section id="about" class="py-20 bg-gray-50/70">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid md:grid-cols-12 gap-12 items-center">
+                
+                <!-- Steve's Photo Placeholder -->
+                <div class="md:col-span-4 lg:col-span-3">
+                    <img src="https://placehold.co/300x300/e5e7eb/1f2937?text=Steve+The+Builder" 
+                         alt="Friendly portrait of Steve, founder of FlowSite Builders"
+                         class="w-48 h-48 sm:w-64 sm:h-64 object-cover rounded-full mx-auto shadow-xl ring-4 ring-white"
+                         onerror="this.onerror=null; this.src='https://placehold.co/300x300/1f2937/ffffff?text=Steve';"
+                    />
+                </div>
+
+                <!-- Content -->
+                <div class="md:col-span-8 lg:col-span-9 text-center md:text-left">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark mb-4">Meet Steve — Your Website Guy</h2>
+                    <p class="text-xl text-gray-600 leading-relaxed max-w-3xl md:ml-0 mx-auto">
+                        Hi, I’m Steve, founder of FlowSite Builders. I help small-business owners get online quickly without spending thousands of dollars. Whether you’re a plumber, barber, or shop owner, I’ll help you look professional, build trust, and attract more customers. Let’s get your flow of business started!
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section (High-Converting Form) -->
+        <section id="contact" class="py-20">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="bg-white p-6 sm:p-10 rounded-2xl shadow-2xl border-2 border-flow-blue/10">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-flow-dark text-center mb-10">Get Your Website Today</h2>
+                    
+                    <!-- Success Message Container (Hidden by default) -->
+                    <div id="success-message" class="hidden text-center py-20 bg-flow-blue/10 rounded-xl border border-flow-blue/30">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-send-check text-flow-blue mx-auto mb-4"><path d="m3 3 3 9-3 9 19-9Z"/><path d="M12 12V3"/><path d="m16 16 2 2 4-4"/></svg>
+                        <p class="text-2xl font-bold text-flow-dark mb-2">Thank You!</p>
+                        <p class="text-xl text-gray-700">Your inquiry has been successfully submitted to Steve. He will be in touch within 24 hours.</p>
+                        <a href="#hero" class="mt-6 inline-block text-flow-blue hover:text-emerald-600 font-semibold underline">Return to Top</a>
+                    </div>
+
+                    <!-- Form Container (Visible by default) -->
+                    <div id="contact-form-container">
+                        <!-- 
+                            IMPORTANT: The `action="/thank-you/"` attribute is REMOVED 
+                            and submission is handled by JavaScript (AJAX) to prevent the 404 error 
+                            and show the success message directly on the page.
+                        -->
+                        <form name="contact" method="POST" data-netlify="true" class="space-y-6">
+                            <!-- Hidden field required by Netlify Forms (MUST STAY) -->
+                            <input type="hidden" name="form-name" value="contact" /> 
+
+                            <!-- Name & Business Name -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Your Name</label>
+                                    <input type="text" name="name" id="name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                                </div>
+                                <div>
+                                    <label for="business-name" class="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
+                                    <input type="text" name="business-name" id="business-name" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                                </div>
+                            </div>
+
+                            <!-- Phone & Email -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                    <input type="tel" name="phone" id="phone" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                                </div>
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                                    <input type="email" name="email" id="email" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition">
+                                </div>
+                            </div>
+
+                            <!-- Service Needed -->
+                            <div>
+                                <label for="service" class="block text-sm font-medium text-gray-700 mb-1">Service Needed</label>
+                                <select id="service" name="service" required class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-flow-blue focus:border-flow-blue transition appearance-none bg-white">
+                                    <option value="">Select a package...</option>
+                                    <option value="starter">Starter Website ($199)</option>
+                                    <option value="business">Business Website ($349) - Recommended</option>
+                                    <option value="premium">Premium Website ($499)</option>
+                                    <option value="call">Schedule a Free Call</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div>
+                                <button type="submit" class="w-full px-8 py-4 text-xl font-bold text-white bg-flow-blue rounded-xl shadow-xl shadow-flow-blue/40 hover:bg-emerald-600 transition duration-300 transform hover:scale-[1.005]">
+                                    Submit Inquiry & Get Started
+                                </button>
+                            </div>
+
+                            <p class="text-center text-sm text-gray-500">
+                                We’ll get back to you within 24 hours.
+                            </p>
+                        </form>
+                        
+                        <!-- Optional CTA -->
+                        <div class="mt-8 text-center">
+                            <span class="text-gray-600 block mb-2">— OR —</span>
+                            <!-- Replace '#' with your WhatsApp link (e.g., https://wa.me/15551234567) -->
+                            <a href="#" class="inline-flex items-center px-6 py-3 text-lg font-semibold text-white bg-green-500 rounded-xl shadow-lg hover:bg-green-600 transition duration-300">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-circle-code mr-2"><path d="M7.9 20A10 10 0 0 0 16 15V4a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h3.1Z"/><path d="m10 8-2 2 2 2"/><path d="m14 8 2 2-2 2"/></svg>
+                                WhatsApp Steve Now
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Mock Legal Page 1: Terms and Privacy -->
+        <section id="terms-and-privacy" class="py-20 bg-white border-t border-gray-200">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
+                <h2 class="text-3xl font-bold text-flow-dark mb-6">Terms & Privacy (Mock Content)</h2>
+                <p class="text-sm text-gray-500 mb-8">Last Updated: October 25, 2025</p>
+
+                <h3 class="text-2xl font-semibold text-flow-dark mb-3">1. Terms of Service</h3>
+                <p class="text-gray-700 mb-6">
+                    By using FlowSite Builders services, you agree to these mock terms. Our service is to deliver a functional, single-page website within 72 hours, as per the package selected. We are not responsible for third-party hosting costs (e.g., domain registration or advanced hosting services beyond Netlify's free tier). All content provided by FlowSite Builders (excluding client-owned logos and branding) is licensed to the client for website use only.
+                </p>
+
+                <h3 class="text-2xl font-semibold text-flow-dark mb-3">2. Privacy Policy</h3>
+                <p class="text-gray-700">
+                    We only collect necessary contact information (Name, Business Name, Email, Phone) via our contact form for the purpose of initiating service and communication. We do not sell or share your personal data with third-party advertisers. All client information is kept confidential and used solely for fulfilling your website building request.
+                </p>
+                <div class="mt-8 text-center">
+                    <a href="#hero" class="text-flow-blue hover:text-emerald-600 font-semibold">Back to Top</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mock Legal Page 2: 7-Day Refund Policy -->
+        <section id="refund-policy" class="py-20 bg-gray-50/70 border-t border-gray-200">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-left">
+                <h2 class="text-3xl font-bold text-flow-dark mb-6">7-Day Risk-Free Money-Back Guarantee</h2>
+                <p class="text-sm text-gray-500 mb-8">Effective Date: October 25, 2025</p>
+
+                <p class="text-xl font-medium text-flow-dark mb-6">
+                    We are confident in our speed and quality. If you are not completely satisfied with the initial website design and delivery within the first 7 days of launch, we offer a **full refund.**
+                </p>
+
+                <h3 class="text-2xl font-semibold text-flow-dark mb-3">How the Guarantee Works:</h3>
+                <ul class="list-disc list-inside space-y-3 text-gray-700 mb-6 pl-4">
+                    <li>The 7-day period begins on the day we provide you with the first live link to your website.</li>
+                    <li>To request a refund, you must contact Steve directly via email or phone within the 7-day window.</li>
+                    <li>The guarantee covers the cost of our service package only. Third-party fees (like domain registration) are non-refundable.</li>
+                    <li>Upon successful refund, FlowSite Builders reserves the right to unpublish or reclaim the website files.</li>
+                </ul>
+
+                <p class="text-gray-700">
+                    Our goal is your satisfaction. We always prefer to resolve any issues via free edits during the initial 7-day period before processing a refund.
+                </p>
+                <div class="mt-8 text-center">
+                    <a href="#hero" class="text-flow-blue hover:text-emerald-600 font-semibold">Back to Top</a>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-flow-dark text-white py-12 mt-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-8 border-b border-gray-700 pb-8 mb-8">
+                
+                <!-- Logo/Branding -->
+                <div class="col-span-2 md:col-span-2">
+                    <h4 class="text-2xl font-extrabold tracking-tight mb-2">FlowSite<span class="text-flow-blue">Builders</span></h4>
+                    <p class="text-gray-400 max-w-xs">“Your website, built in minutes — not months.”</p>
+                </div>
+
+                <!-- Navigation Links -->
+                <div class="space-y-2">
+                    <h5 class="font-bold text-flow-blue mb-2">Quick Links</h5>
+                    <a href="#" class="block text-gray-300 hover:text-flow-blue transition duration-200">Home</a>
+                    <a href="#services" class="block text-gray-300 hover:text-flow-blue transition duration-200">Services</a>
+                    <a href="#pricing" class="block text-gray-300 hover:text-flow-blue transition duration-200">Pricing</a>
+                    <a href="#contact" class="block text-gray-300 hover:text-flow-blue transition duration-200">Contact</a>
+                </div>
+
+                <!-- Legal Links -->
+                <div class="space-y-2">
+                    <h5 class="font-bold text-flow-blue mb-2">Legal</h5>
+                    <a href="#terms-and-privacy" class="block text-gray-300 hover:text-flow-blue transition duration-200">Terms & Privacy</a>
+                    <a href="#refund-policy" class="block text-gray-300 hover:text-flow-blue transition duration-200">**7-Day Refund Policy**</a>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="text-center text-gray-500 text-sm">
+                FlowSite Builders © 2025 – Built for Small Businesses
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
+
